@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Q&A</title>
+</head>
+
+<body>
+    <h1>Upload an Image</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="imageFile" name="image" accept=".png, .jpg, .jpeg, .gif" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <h2>Ask a Question</h2>
+    <input type="text" id="question" placeholder="Enter your question">
+    <button id="askButton">Ask</button>
+
+    <h3 id="response"></h3>
+
+    <script>
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageFile');
+            formData.append('image', fileInput.files[0]);
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log(result);
+            document.getElementById('response').innerText = 'Predictions: ' + JSON.stringify(result.predictions) + ', Extracted Text: ' + result.extracted_text;
+        };
+
+        document.getElementById('askButton').onclick = async () => {
+            const question = document.getElementById('question').value;
+            const context = document.getElementById('response').innerText;
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question, context })
+            });
+
+            const result = await response.json();
+            document.getElementById('response').innerText += '\nAnswer: ' + result.answer;
+        };
+    </script>
+</body>
+
+</html>
